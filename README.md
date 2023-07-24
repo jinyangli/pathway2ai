@@ -1,10 +1,10 @@
-# This is a series of exercises to get your hands dirty on parallelizing training of Deep Neural networks over multiple devices / machines / GPUs
-# Enjoy and Good luck!
+# Understanding parallel deep neural network training
+
+This is a series of exercises to get your hands dirty on parallelizing the training of Deep Neural Networks Ideally, we want to parallelize across multiple GPU devices, possibly over over multiple machines.  However, GPUs are hard to get (esp if you want many of them), so we'll develop and test using your own laptop, on CPU only. The code and the concept is exactly the same, except that on your laptop, we won't be able to get any speedup from "parallelization".
 
 ## Exercise 1: Complete the basic training of a toy multi-layer perceptron
 
-Download [mlp.py](https://github.com/jinyangli/pathway2ai/blob/master/mlp.py).  
-Alternatively, you can clone this git repository to get all the files using command `git clone git@github.com:jinyangli/pathway2ai.git`.
+Download [mlp.py](https://github.com/jinyangli/pathway2ai/blob/master/mlp.py).  Alternatively, you can clone this git repository to get all the files using command `git clone git@github.com:jinyangli/pathway2ai.git`.
 
 Read the code carefully. Complete the missing code block or function body that follow a comment starting with **TODO**
 
