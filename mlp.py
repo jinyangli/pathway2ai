@@ -8,17 +8,11 @@ from dataclasses import dataclass
 from sklearn.datasets import make_classification
 
 import torch
-import torch.distributed as dist
-import torch.multiprocessing as mp
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 import torch.utils.data as data
-
-from torch.nn.parallel import DistributedDataParallel as DDP
-
-debug = True
 
 """
 ModelConfig contains the model and training parameters
@@ -152,7 +146,7 @@ if __name__ == "__main__":
 
     dc = ModelConfig()
 
-    parser = argparse.ArgumentParser(description="Manual implementation of data parallelism training")
+    parser = argparse.ArgumentParser(description="MLP training")
     parser.add_argument('--n-layers', type=int, default=dc.n_layers, help="number of layers")
     parser.add_argument('--dim-in', type=int, default=dc.d_in, help="input data dimension")
     parser.add_argument('--n-classes', type=int, default=dc.n_classes, help="output data dimension")
