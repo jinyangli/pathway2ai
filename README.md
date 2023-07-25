@@ -70,8 +70,44 @@ Under the DP (data parallelism) parallelization strategy, each worker holds a co
 
 If you look carefully, you'll see the connection between DP and the parallel matrix multiplication we implemented in Exercise 2.  Here's the connection. In the forward path, DP is like parallelizing a matrix multiplication by partitiong the row dimension (aka the batch dimension) of its input data matrix (and duplicating the weight matrix). In the backward path, DP is like parallelizing a matrix multiplication by partitioning along the reduction/batch dimension of the error matrix (calculated from the previous layer) and the activation matrix (saved from the forward path).  
 
-PyTorch has built-in mechanism for DP. Read the [documentation](https://pytorch.org/tutorials/intermediate/ddp_tutorial.html), and modify your `mlp.py` program to use Pytorch's DDP. Your modification should be no more than several additional lines.
+PyTorch has built-in mechanism for DP, which internally takes care of making weights identical initially and doing all_reduce on gradients etc. Read the [documentation](https://pytorch.org/tutorials/intermediate/ddp_tutorial.html) on how to use the built-in DDP, and modify your `mlp.py` program accordingly. Your modification should be no more than several additional lines.  
+
+There are several things to be careful about in your training using DDP. One, we'll create the same identical artificial input dataset on all workers, so there is no need to scatter a single input dataset from one to all workers.  This is done by having all workers call `gen_dataset(config, rand_state=0)` in their `train` function using the same random state (0).  However, different workers should work in different "batch" (aka sub-batch) of the same dataset during training.  Therefore, in your training loop, a worker should skip those batches that are to be processed by another worker. Suppose there are 2 workers, then worker-0 should process batch 0 and worker-1 should process batch 1 in the first iteration (and worker-0 should process batch 2 and worker-2 should process batch 3 in the second iteration and so on). Thus you should do something like the following:
+
+```
+for i, batch in enumerate(train_data_loader):
+    if (i % world_size) != rank:
+        continue
+    ...
+```
+
+Another thing you should do is to add a debugging function to check that all workers have the same model parameter weights after each training iteration. You can have rank-0 node fetch the model weights from all workers and compare if they are identical using `torch.allclose` function.
+
+```
+def check_parameter_closeness(model):
+    for n, p in model.named_parameters():
+        #check that parameter p is the same across all workers
+    return True
+```
+
+Insert `check_parameter_closeness` in your training loop to assure yourself that all workers start and/or end with the same model parameter weights at each iteration of the loop.
 
 While DP is simple conceptually, there is a lot of cleverness in its actual implementation to make it fast.  You can read more about them [here](https://arxiv.org/pdf/2006.15704.pdf) and [here](https://sysnetome.com/papers/bytescheduler_sosp2019.pdf).
 
 ## Exercise 4: Implement our own distributed data parallel training
+
+In this exercise, we are going to ignore PyTorch's built-in DDP and implement our own data parallel training.  You are going to make your implementation as easy to use as the built-in DDP. To do so, you will create a new wrapper class `MyDP`. 
+Your class will ensure that all workers start with the same model weights by broadcasting rank-0 node's weights to overwrite those of all workers.  Your class will also register a hook function using PyTorch's [register_hook](https://pytorch.org/docs/stable/generated/torch.Tensor.register_hook.html) to perform all_reduce of the gradients on the backward path.
+
+You can use the following skeleton:
+```
+class MyDP(nn.Module):
+    def __init__(self, model):
+        super().__init__()
+	# 1. Add your code to broadcast rank-0 node's parameter weights to all workers 
+        # so everyone starts with the same model weights
+        # 2. register a hook on each model parameter to perform all_reduce of the gradients on the backward path
+    def forward(self, data, target=None):
+        return self.model.forward(data, target)
+
+
