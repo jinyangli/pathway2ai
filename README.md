@@ -39,7 +39,7 @@ os.environ["MASTER_ADDR"] = "localhost"
 os.environ["MASTER_PORT"] = "9999"                                                                                                
 mp.spawn(do_work, args=(2,), nprocs=2, join=True)       
 ```
-The above code will spawn 2 processes (a process is an instance of a running program) whose starting point of execution is the `do_work` function. In order for these processes to communicate, they will need to listen on some local [port](https://en.wikipedia.org/wiki/Port_(computer_networking\)), which we have specified to start from "9999".
+The above code will spawn 2 processes (a process is an instance of a running program) whose starting point of execution is the `do_work` function. In order for these processes to communicate, they will need to listen on some local [port](https://en.wikipedia.org/wiki/Port_(computer_networking)), which we have specified to start from "9999".
 
 Now, let's look at parts of the `do_work` function below:
 ```
@@ -54,7 +54,11 @@ $ python dist.py
 My rank is 1, same as 1
 My rank is 0, same as 0
 ```
-Next, let us do some simple exercise to parallelize matrix multiplication across multiple (aka `world_size`) workers.  Suppose the matrix multiplication operation under consideration is `C=A@B` where `A` is of shape `(m,k)`, B is of shape `(k,n)`, and C is of shape `(m,n)`.  We will implement two parallelization strategies, partition-by-row and partition-by-reduction.  In partition-by-row, we cut matrix A by the row dimension and send one piece to each worker, and we duplicate matrix B on all workers.  Each worker computes `C_piece = A_piece @ B` , where `A_piece` is of shape `(m // world_size, k)` and `C_piece` is of shape `(m // world_size, n).  Each worker holds a piece of the result, which can be communicated to a single node, if necessary.  In partition-by-reduction, we cut matrix A by the column dimension and cut matrix B by the row dimension . Each worker computes `C_i = A_piece @ B_piece`, where `A_piece` is of shape `(m, k//world_size)` and `B_piece` is of shape `(k//world_size, n)` and `C_i` is of shape `(m,n)`.  To compute the final result C, we need to sum all `C_i` matrixes together.
+Next, let us do some simple exercise to parallelize matrix multiplication across multiple (aka `world_size`) workers.  Suppose the matrix multiplication operation under consideration is `C=A@B` where `A` is of shape `(m,k)`, B is of shape `(k,n)`, and C is of shape `(m,n)`.  We will implement two parallelization strategies, **partition-by-row** and **partition-by-reduction**.  
+
+In **partition-by-row**, we cut matrix A by the row dimension and send one piece to each worker, and we duplicate matrix B on all workers.  Each worker computes `C_piece = A_piece @ B` , where `A_piece` is of shape `(m // world_size, k)` and `C_piece` is of shape `(m // world_size, n)`.  Each worker holds a piece of the result, which can be communicated to a single node, if necessary.  
+
+In **partition-by-reduction**, we cut matrix A by the column dimension and cut matrix B by the row dimension . Each worker computes `C_i = A_piece @ B_piece`, where `A_piece` is of shape `(m, k//world_size)` and `B_piece` is of shape `(k//world_size, n)` and `C_i` is of shape `(m,n)`.  To compute the final result C, we need to sum all `C_i` matrixes together.
 
 ## Exercise 3: Turn the basic MLP training into distributed data parallel training using Pytorch's built-in DDP mechanism
 
