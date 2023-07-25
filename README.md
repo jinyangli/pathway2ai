@@ -39,7 +39,9 @@ os.environ["MASTER_ADDR"] = "localhost"
 os.environ["MASTER_PORT"] = "9999"                                                                                                
 mp.spawn(do_work, args=(2,), nprocs=2, join=True)       
 ```
-The above code will spawn 2 processes (a process is an instance of a running program) whose starting point of execution is the `do_work` function. In order for these processes to communicate, they will need to listen on some local [port](https://en.wikipedia.org/wiki/Port_(computer_networking)), which we have specified to start from "9999".
+The above code will spawn 2 processes (a process is an instance of a running program) whose starting point of execution is the `do_work` function. In order for these processes to communicate, they will need to listen on some local [port](https://en.wikipedia.org/wiki/Port_(computer_networking)), which we have specified to start from "9999". 
+
+We note that, to simply running and debugging our exercises, we run multiple workers on **the same machine with CPU only**. Doing so will **not** give us any performance speedup: since MKL already parallelizes its libraries across multiple CPU cores on a single machine, a single worker can already fully utilize the single CPU machine.  Nethertheless, if we do have access to multiple machines or a single machine with multiple GPU cards, we can run **exactly the same** program to actually achieve some speed-up.
 
 Now, let's look at parts of the `do_work` function below:
 ```
