@@ -31,7 +31,7 @@ Pytorch's linear algebra operations such as matrix multiplication use existing t
 
 Pytorch closely follows the parallel programming paradigm of [MPI](https://en.wikipedia.org/wiki/Message_Passing_Interface) (message-passing interface).  Under this model, the program starts by launching multiple worker processes, each of which performs its execution from the same given entry point function.  Each worker process performs a piece of the computation, communicating their inputs/intermediate results/outputs using the so-called collective communication primitives, such as broadcast, scatter, gather, all\_reduce etc. You can read more about them in the Pytorch [documentation](https://pytorch.org/docs/stable/distributed.html), or the [tutorial](https://pytorch.org/tutorials/intermediate/dist_tuto.html).
 
-For this exercise, complete [dist.py]((https://github.com/jinyangli/pathway2ai/blob/master/dist.py).
+For this exercise, complete [dist.py](https://github.com/jinyangli/pathway2ai/blob/master/dist.py).
 
 First, let's look at the following code segment in the main function:
 ```
@@ -58,7 +58,7 @@ Next, let us do some simple exercise to parallelize matrix multiplication across
 
 In **partition-by-row**, we cut matrix A by the row dimension and send one piece to each worker, and we duplicate matrix B on all workers.  Each worker computes `C_piece = A_piece @ B` , where `A_piece` is of shape `(m // world_size, k)` and `C_piece` is of shape `(m // world_size, n)`.  Each worker holds a piece of the result, which can be communicated to a single node, if necessary.  
 
-In **partition-by-reduction**, we cut matrix A by the column dimension and cut matrix B by the row dimension . Each worker computes `C_i = A_piece @ B_piece`, where `A_piece` is of shape `(m, k//world_size)` and `B_piece` is of shape `(k//world_size, n)` and `C_i` is of shape `(m,n)`.  To compute the final result C, we need to sum all `C_i` matrixes together.
+In **partition-by-reduction**, we cut matrix A by the column dimension and cut matrix B by the row dimension . Each worker computes `C_i = A_piece @ B_piece`, where `A_piece` is of shape `(m, k//world_size)` and `B_piece` is of shape `(k//world_size, n)` and `C_i` is of shape `(m,n)`.  To compute the final result C, we then sum all the `C_i` matrixes together.
 
 ## Exercise 3: Turn the basic MLP training into distributed data parallel training using Pytorch's built-in DDP mechanism
 
