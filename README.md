@@ -62,4 +62,12 @@ In **partition-by-reduction**, we cut matrix A by the column dimension and cut m
 
 ## Exercise 3: Turn the basic MLP training into distributed data parallel training using Pytorch's built-in DDP mechanism
 
+In this exercise, we are going to modify the `mlp.py` program you wrote in Exercise 1 into one that performs distributed data parallelism training over multiple worker processes.
+
+In single worker training, each iteration of the training loop works on a batch of data to perform the forward (to calculate the loss) and backward computation (to calculate the gradient). Then the model's weight/parameter is updated using the gradient. And the next iteration proceeds with the updated model weights.
+
+Under the DP (data parallelism) parallelization strategy, each worker holds a complete copy of the model parameter, and we can view each batch of data as being cut into sub-batches/pieces. At each training iteration, each worker performs the forward and backward computation using its sub-batch.  In effect, each worker calculates the gradient based on the loss of its sub-batch.  To obtain the gradient of the overall batch of data, we must sum the gradients from all the sub-batch together at all workers using all_reduce.  If you squint, you'll see the connection between DP and the parallel matrix multiplication we implemented in Exercise 2.  Here's the connection. In the forward path, DP is like parallelizing a matrix multiplication by partitiong the row dimension (aka the batch dimension) of its input data matrix (and duplicating the weight matrix). In the backward path, DP is like parallelizing a matrix multiplication by partitioning along the reduction/batch dimension of the error matrix (calculated from the previous layer) and the activation matrix (saved from the forward path).  PyTorch has built-in mechanism for DP. Read the [documentation](https://pytorch.org/tutorials/intermediate/ddp_tutorial.html), and modify your `mlp.py` program to use Pytorch's DDP. Your modification should be no more than several additional lines.
+
+While DP is simple conceptually, there is a lot of cleverness in its actual implementation to make it fast.  You can read more about them [here](https://arxiv.org/pdf/2006.15704.pdf) and [here](https://sysnetome.com/papers/bytescheduler_sosp2019.pdf).
+
 ## Exercise 4: Implement our own distributed data parallel training

@@ -20,7 +20,7 @@ with their default values
 """
 @dataclass
 class ModelConfig():
-    n_layers : int = 1
+    n_layers : int = 4
     d_in : int = 1024
     n_classes: int = 32
     d_hidden : int = 256
@@ -155,6 +155,7 @@ if __name__ == "__main__":
     dc = ModelConfig()
 
     parser = argparse.ArgumentParser(description="MLP training")
+    parser.add_argument('--world-size', type=int, default=2, help="number of workers")
     parser.add_argument('--n-layers', type=int, default=dc.n_layers, help="number of layers")
     parser.add_argument('--dim-in', type=int, default=dc.d_in, help="input data dimension")
     parser.add_argument('--n-classes', type=int, default=dc.n_classes, help="output data dimension")
