@@ -43,14 +43,14 @@ Now, let's look at the `do_work` function below:
 ```
 def do_work(rank, world_size):
     dist.init_process_group("gloo", rank=rank, world_size=world_size)
-    print(f'My rank is {dist.get_rank()}')
+    print(f'My rank is {rank}, same as {dist.get_rank()}')
 ```
 The entry point function's first argument is always `rank`, which is an integer identifier from 0...world\_size-1.  Thus, even though both worker processes start executing the same entry function `do_work`, they are passed different argument values for `rank`.
 The rank of a process can also be queried using the library function `dist.get_rank()`. Hence, the overal results would print 
 ```
 $ python dist.py
-My rank is 1
-My rank is 0
+My rank is 1, same as 1
+My rank is 0, same as 0
 ```
 
 ## Exercise 3: Turn the basic MLP training into distributed data parallel training using Pytorch's built-in DDP mechanism
