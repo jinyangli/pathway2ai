@@ -46,6 +46,8 @@ class MLP(nn.Module):
             torch.nn.init.kaiming_uniform_(l.weight)
             self.layers.append(l)
         elif config.n_layers > 1:
+            print(f'TODO: fill me up in __init__')
+            assert False
             # TODO: create n_layers linear layers with the following weights:
             # d_in x d_hidden, d_hidden x d_hidden, ..., d_hidden x n_classes
             # do not use bias for now.
@@ -57,6 +59,8 @@ class MLP(nn.Module):
          out = data
          i = 0
          for layer in self.layers:
+             print(f'TODO: fill me up in forward')
+             assert False
              #TODO: fill in the body of this loop to perform computation on the forward path
              # first,do "out = layer(out)" to apply one linear layer to the input (output from previous layer)
              # then, apply non-linear activation function F.tanh to output
@@ -74,10 +78,14 @@ evaluate the mean loss of the model over a given dataset
 def evaluate(model, dataset, batch_size=50, max_batches=None):
     model.eval()
 
-    #TODO: add your code here
+    #TODO: add your code here to calculate the average loss of 
+    # of the model over the given dataset
+    print(f'TODO: fill me up in evaluate')
+    assert False
+    loss = 0.0
 
     model.train() # reset model back to training mode
-    return 0
+    return loss
 
 """
 gen_dataset uses scikit-learn's make_classification to 
