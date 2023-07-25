@@ -29,9 +29,11 @@ step 900 | train_loss 0.2070 | test_loss 0.2232 | step time 11.66ms
 
 Pytorch's linear algebra operations such as matrix multiplication use existing third-party fast libraries.  For example, when running on CPU, Pytorch typically uses Intel's [MKL](https://en.wikipedia.org/wiki/Math_Kernel_Library) library.  When running on GPU, Pytorch uses NVIDIA CUDA libraries such as [cuDNN](https://developer.nvidia.com/cudnn) or [cuBLAS](https://developer.nvidia.com/cublas#:~:text=The%20cuBLAS%20library%20contains%20extensions,improvements%20and%20new%20GPU%20architectures.)  These libraries parallelize operations over a single GPU device or a single multicore-CPU-machine using multiple cores and vector instrincs.  However, what if we want to further parallelize across multiple GPU devices or multiple machines?  Doing so is beyond the capabilities of existing math libraries like MKL, cuDNN/cuBLAS.  In particular, when computation is cut into pieces and spread across different machines,  we need to explicitly communicate input, output or intermediate data between different machines.  In this exercise, we will get our hands dirty on how to parallelize computation across different machines.
 
-Pytorch closely follows the parallel programming paradigm of [MPI](https://en.wikipedia.org/wiki/Message_Passing_Interface) (message-passing interface).  Under this model, the program starts by launching a given number of worker processes,  each of which performs its execution from the same given entry point function.  
+Pytorch closely follows the parallel programming paradigm of [MPI](https://en.wikipedia.org/wiki/Message_Passing_Interface) (message-passing interface).  Under this model, the program starts by launching multiple worker processes, each of which performs its execution from the same given entry point function.  Each worker process performs a piece of the computation, communicating their inputs/intermediate results/outputs using the so-called collective communication primitives, such as broadcast, scatter, gather, all\_reduce etc. You can read more about them in the Pytorch [documentation](https://pytorch.org/docs/stable/distributed.html), or the [tutorial](https://pytorch.org/tutorials/intermediate/dist_tuto.html).
 
-Look at the following code segment in the main function:
+For this exercise, complete [dist.py]((https://github.com/jinyangli/pathway2ai/blob/master/dist.py).
+
+First, let's look at the following code segment in the main function:
 ```
 os.environ["MASTER_ADDR"] = "localhost"                                                                                           
 os.environ["MASTER_PORT"] = "9999"                                                                                                
@@ -39,7 +41,7 @@ mp.spawn(do_work, args=(2,), nprocs=2, join=True)
 ```
 The above code will spawn 2 processes (a process is an instance of a running program) whose starting point of execution is the `do_work` function. In order for these processes to communicate, they will need to listen on some local [port](https://en.wikipedia.org/wiki/Port_(computer_networking\)), which we have specified to start from "9999".
 
-Now, let's look at the `do_work` function below:
+Now, let's look at parts of the `do_work` function below:
 ```
 def do_work(rank, world_size):
     dist.init_process_group("gloo", rank=rank, world_size=world_size)
@@ -52,6 +54,7 @@ $ python dist.py
 My rank is 1, same as 1
 My rank is 0, same as 0
 ```
+Next, let us do some simple exercise to parallelize matrix multiplication across multiple (aka `world_size`) workers.  Suppose the matrix multiplication operation under consideration is `C=A@B` where `A` is of shape `(m,k)`, B is of shape `(k,n)`, and C is of shape `(m,n)`.  We will implement two parallelization strategies, partition-by-row and partition-by-reduction.  In partition-by-row, we cut matrix A by the row dimension and send one piece to each worker, and we duplicate matrix B on all workers.  Each worker computes `C_piece = A_piece @ B` , where `A_piece` is of shape `(m // world_size, k)` and `C_piece` is of shape `(m // world_size, n).  Each worker holds a piece of the result, which can be communicated to a single node, if necessary.  In partition-by-reduction, we cut matrix A by the column dimension and cut matrix B by the row dimension . Each worker computes `C_i = A_piece @ B_piece`, where `A_piece` is of shape `(m, k//world_size)` and `B_piece` is of shape `(k//world_size, n)` and `C_i` is of shape `(m,n)`.  To compute the final result C, we need to sum all `C_i` matrixes together.
 
 ## Exercise 3: Turn the basic MLP training into distributed data parallel training using Pytorch's built-in DDP mechanism
 
