@@ -101,7 +101,7 @@ While DP is simple conceptually, there is a lot of cleverness in its actual impl
 In this exercise, we are going to ignore PyTorch's built-in DDP and implement our own data parallel training.  You are going to make your implementation as easy to use as the built-in DDP. To do so, you will create a new wrapper class `MyDP`. 
 Your class will ensure that all workers start with the same model weights by broadcasting rank-0 node's weights to overwrite those of all workers.  Your class will also register a hook function using PyTorch's [register_hook](https://pytorch.org/docs/stable/generated/torch.Tensor.register_hook.html) to perform all_reduce of the gradients on the backward path.
 
-You can use the following skeleton:
+You can use the following skeleton code:
 ```
 class MyDP(nn.Module):
     def __init__(self, model):
